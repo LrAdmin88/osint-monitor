@@ -103,35 +103,6 @@ function limpiarUrlDecodificada(url) {
     .replace(/&amp;/g, "&");
 }
 
-function extraerIdGoogleNews(urlGoogle) {
-  const m = urlGoogle.match(/\/(?:rss\/)?articles\/([^?]+)/i);
-  return m ? m[1] : null;
-}
-
-function limpiarUrlDecodificada(url) {
-  return url
-    .replace(/\\u0026/g, "&")
-    .replace(/\\\//g, "/")
-    .replace(/&amp;/g, "&");
-}
-
-function extraerIdGoogleNews(urlGoogle) {
-  const m = urlGoogle.match(/\/(?:rss\/)?articles\/([^?]+)/i);
-  return m ? m[1] : null;
-}
-
-function limpiarUrlDecodificada(url) {
-  return url
-    .replace(/\\u0026/g, "&")
-    .replace(/\\\//g, "/")
-    .replace(/&amp;/g, "&");
-}
-
-function pruebaObtenerUrlReal() {
-  const url = "https://news.google.com/rss/articles/CBMi5wFBVV95cUxPYUVkdzdrYzdSM0d2WklCU2swM0hkTTF5dGdNSW9YOVVMWTZUX1lqYUpwa3NIMzZMM0VxcFNHWHZRb3pDZ1lRTTRscmRWN1RkOGgyQ0hTVVFTRjgzeVhaeXZNNThVeVBaY0hXZTZJaE9kSmppV0k1NnFfd2JpMzZLRW9YMkVYOENzSzQ3dnptVFMwVm80RVhYZjMxQ0xwMHplcjBlOGlKeXlrZVhfa0ZXU1hQTmpyVFVSeDljWnRwamlVRGNHRkhyYWFhY21OWGhlLW44c1N1cVF2bXBMYU5CS0MtaHlGOGc?oc=5";
-  const resultado = obtenerUrlReal(url);
-  Logger.log("Resultado final: " + resultado);
-}
 
 // --- 4. MOTOR DE PROCESAMIENTO DE AGENCIAS ---
 function procesarCanal(ss, nombreOrigen, nombreDestino, fechaCorte, ahora, limiteFilas) {
@@ -222,6 +193,7 @@ function tituloMencionaPaisEsperado(titNorm, pais) {
   const lista = aliases[p] || [normalizarTexto(pais)];
   return lista.some(x => titNorm.includes(normalizarTexto(x)));
 }
+
 
 function normalizarTexto(texto) {
   return (texto || "")
@@ -425,86 +397,227 @@ function coincidePaisAcronimo(pais, acronimo, titNorm) {
     }
 
     if (p === "ITALIA") {
-      const identidadItalia = contieneAlguno(t, [
-        "dipartimento delle informazioni per la sicurezza",
-        "intelligence italiana",
-        "servizi segreti italiani",
-        "italia",
-        "italian intelligence"
-      ]);
 
-      const ruidoFinanciero = contieneAlguno(t, [
-        "revenue",
-        "profit",
-        "stock",
-        "market",
-        "trading",
-        "tradingview",
-        "earnings",
-        "financial",
-        "shares",
-        "investor",
-        "guidance",
-        "forecast",
-        "full-year",
-        "economic",
-        "quarter",
-        "results",
-        "nav",
-        "bond market",
-        "cash flow"
-      ]);
+    const nombreFormal = contieneAlguno(t, [
+      "dipartimento delle informazioni per la sicurezza"
+    ]);
 
-      return identidadItalia && !ruidoFinanciero;
-    }
+    const siglaExacta = contienePalabraExacta(t, "dis");
 
-    return false;
+    const contextoOperativo = contieneAlguno(t, [
+      "italian intelligence",
+      "intelligence italiana",
+      "sicurezza nazionale italiana",
+      "security service",
+      "spy",
+      "spies",
+      "espionage",
+      "counterintelligence",
+      "controspionaggio",
+      "operazione di intelligence",
+      "agente segreto",
+      "agenti segreti",
+      "vittorio rizzi",
+      "rizzi"
+    ]);
+
+    const ruidoAiseIt = contieneAlguno(t, [
+      "aise.it",
+      "agenzia internazionale stampa estero"
+    ]);
+
+    const ruidoDiplomaticoComercial = contieneAlguno(t, [
+      "made in italy",
+      "camera di commercio",
+      "camara de comercio",
+      "cámara de comercio",
+      "commercio estero",
+      "imprese italiane",
+      "ambasciata",
+      "ambasciatore",
+      "diplomazia",
+      "cooperazione",
+      "relazioni commerciali",
+      "forum economico",
+      "business forum",
+      "evento",
+      "eventi",
+      "incontro",
+      "washington dc",
+      "usa",
+      "ue",
+      "australia",
+      "opportunita per imprese",
+      "opportunità per imprese",
+      "design italiano",
+      "giornata del design"
+    ]);
+
+    const ruidoFinanciero = contieneAlguno(t, [
+      "revenue",
+      "profit",
+      "stock",
+      "market",
+      "trading",
+      "tradingview",
+      "earnings",
+      "financial",
+      "shares",
+      "investor",
+      "guidance",
+      "forecast",
+      "full-year",
+      "economic",
+      "quarter",
+      "results",
+      "nav",
+      "bond market",
+      "cash flow",
+      "borsa",
+      "finanza",
+      "finanziario",
+      "economia",
+      "economico",
+      "investimenti",
+      "startup"
+    ]);
+
+    return (
+      (nombreFormal || (siglaExacta && contextoOperativo)) &&
+      !ruidoAiseIt &&
+      !ruidoDiplomaticoComercial &&
+      !ruidoFinanciero
+    );
   }
 
-
-  // ----- AISE -----
-  if (a === "AISE") {
-    if (p === "ITALIA") {
-      const identidadAISE = contieneAlguno(t, [
-        "aise",
-        "agenzia informazioni e sicurezza esterna",
-        "intelligence italiana",
-        "servizi segreti italiani",
-        "italian intelligence",
-        "italia"
-      ]);
-
-      const ruidoDiplomaticoComercial = contieneAlguno(t, [
-        "made in italy",
-        "camara de comercio",
-        "cámara de comercio",
-        "commercio",
-        "imprese italiane",
-        "rappresentanza permanente",
-        "onu",
-        "eventi",
-        "incontro",
-        "roadshow",
-        "community",
-        "vetrina",
-        "soiree",
-        "soirée",
-        "vino",
-        "spumante",
-        "mercati",
-        "export",
-        "canada",
-        "croazia",
-        "croatia",
-        "luxe",
-        "automobile"
-      ]);
-
-      return identidadAISE && !ruidoDiplomaticoComercial;
-    }
-
     return false;
+
+    
   }
+
+ // ----- AISE -----
+if (a === "AISE") {
+
+  if (p === "ITALIA") {
+
+    const nombreFormal = contieneAlguno(t, [
+      "agenzia informazioni e sicurezza esterna"
+    ]);
+
+    const siglaExacta = contienePalabraExacta(t, "aise");
+
+    const contextoOperativo = contieneAlguno(t, [
+      "italian intelligence",
+      "intelligence italiana",
+      "servizi segreti italiani",
+      "servizio segreto italiano",
+      "spy",
+      "spies",
+      "espionage",
+      "counterintelligence",
+      "controspionaggio",
+      "sicurezza nazionale",
+      "agente segreto",
+      "agenti segreti",
+      "operazione di intelligence",
+      "007"
+    ]);
+
+    const ruidoDiplomaticoComercial = contieneAlguno(t, [
+      "aise.it",
+      "www.aise.it",
+      "made in italy",
+      "camara de comercio",
+      "cámara de comercio",
+      "camera di commercio",
+      "commercio",
+      "commercio estero",
+      "imprese italiane",
+      "rappresentanza permanente",
+      "onu",
+      "eventi",
+      "evento",
+      "incontro",
+      "roadshow",
+      "community",
+      "vetrina",
+      "soiree",
+      "soirée",
+      "vino",
+      "spumante",
+      "mercati",
+      "export",
+      "canada",
+      "croazia",
+      "croatia",
+      "luxe",
+      "automobile",
+      "ambasciata",
+      "ambasciatore",
+      "diplomazia",
+      "cooperazione",
+      "relazioni commerciali",
+      "forum economico",
+      "business forum",
+      "ministero degli esteri",
+      "ministero esteri",
+      "ministero delle imprese"
+    ]);
+
+    const ruidoInstitucional = contieneAlguno(t, [
+      "lavora con noi",
+      "offerta di lavoro",
+      "recruiting",
+      "vacancy",
+      "job",
+      "career",
+      "careers",
+      "stage",
+      "internship",
+      "bando",
+      "concorso",
+      "data engineer"
+    ]);
+
+    const ruidoFinanciero = contieneAlguno(t, [
+      "revenue",
+      "profit",
+      "stock",
+      "market",
+      "trading",
+      "tradingview",
+      "earnings",
+      "financial",
+      "shares",
+      "investor",
+      "guidance",
+      "forecast",
+      "full-year",
+      "economic",
+      "quarter",
+      "results",
+      "nav",
+      "bond market",
+      "cash flow",
+      "borsa",
+      "finanza",
+      "finanziario",
+      "economia",
+      "economico",
+      "investimenti",
+      "startup"
+    ]);
+
+    return (
+      (nombreFormal || (siglaExacta && contextoOperativo)) &&
+      !ruidoDiplomaticoComercial &&
+      !ruidoInstitucional &&
+      !ruidoFinanciero
+    );
+  }
+
+  return false;
+}
   
   // ----- BND -----
   if (a === "BND") {
@@ -713,23 +826,57 @@ function tieneSenalPositivaDura(titNorm, pais, acronimo, nombreLargo) {
   ]);
 }
 
+ 
   // ===== ITALIA / DIS / AISE / AISI =====
-  if (p === "ITALIA" || a === "DIS" || a === "AISE" || a === "AISI") {
-  if (a === "DIS" && !coincidePaisAcronimo(p, a, titNorm)) return false;
+if (p === "ITALIA" || a === "DIS" || a === "AISE" || a === "AISI") {
+
+  if ((a === "DIS" || a === "AISE" || a === "AISI") && !coincidePaisAcronimo(p, a, titNorm)) return false;
+
+  if (a === "AISE") {
+    return contieneAlguno(titNorm, [
+      "agenzia informazioni e sicurezza esterna",
+      "italian intelligence",
+      "intelligence italiana",
+      "servizi segreti italiani",
+      "servizio segreto italiano",
+      "spy",
+      "spies",
+      "espionage",
+      "counterintelligence",
+      "controspionaggio",
+      "sicurezza nazionale",
+      "agente segreto",
+      "agenti segreti",
+      "operazione di intelligence",
+      "007"
+    ]);
+  }
+
+  if (a === "DIS") {
+  return contieneAlguno(titNorm, [
+    "dipartimento delle informazioni per la sicurezza",
+    "sicurezza nazionale italiana",
+    "vittorio rizzi",
+    "italian intelligence",
+    "counterintelligence",
+    "controspionaggio",
+    "espionage",
+    "spy",
+    "spies",
+    "operazione di intelligence",
+    "agente segreto",
+    "agenti segreti"
+  ]);
+  }
 
   return contieneAlguno(titNorm, [
     "servizi segreti",
     "intelligence italiana",
-    "dipartimento delle informazioni per la sicurezza",
-    "agenzia informazioni e sicurezza esterna",
-    "aise",
+    "agenzia informazioni e sicurezza interna",
     "aisi",
-    "dis",
-    "vittorio rizzi",
-    "rizzi"
+    "sicurezza interna"
   ]);
 }
-
   // ===== ISRAEL / MOSSAD / SHIN BET =====
   if (p === "ISRAEL" || a === "MOSSAD" || a === "SHIN BET") {
     return contieneAlguno(titNorm, [
@@ -886,16 +1033,87 @@ function obtenerReglas(pais, acronimo) {
 }
 
   // ===== BRASIL / ABIN =====
-  if (p === "BRASIL" || a === "ABIN") {
-    return {
-      positivos: [
-        "abin", "agencia brasileira de inteligencia", "agência brasileira de inteligência", "inteligencia",
-        "inteligência", "espionagem", "abin paralela", "cyber attack", "ciberataque",
-        "counterintelligence", "contrainteligencia"
-      ],
-      negativos: ["futebol", "novela", "celebridade", "show", "festival", "reality show"]
-    };
-  }
+if (p === "BRASIL" || a === "ABIN") {
+  return {
+    positivos: [
+      "abin",
+      "agencia brasileira de inteligencia",
+      "agência brasileira de inteligência",
+      "inteligencia",
+      "inteligência",
+      "espionagem",
+      "abin paralela",
+      "cyber attack",
+      "ciberataque",
+      "counterintelligence",
+      "contrainteligencia",
+      "contrainteligência",
+      "segurança",
+      "seguranca",
+      "fronteira",
+      "rondonia",
+      "rondônia",
+      "ro",
+      "mercurio",
+      "mercúrio",
+      "garimpo",
+      "garimpeiro",
+      "mineração ilegal",
+      "mineracao ilegal",
+      "contrabando",
+      "crime ambiental",
+      "terra indígena",
+      "terra indigena",
+      "sararé",
+      "sarare",
+      "megaoperação",
+      "megaoperacao",
+      "operação",
+      "operacao",
+      "polícia federal",
+      "policia federal",
+      "ibama",
+      "funai",
+      "casa civil",
+      "escolas",
+      "violência",
+      "violencia",
+      "prevenção",
+      "prevencao",
+      "criptografia",
+      "criptográfico",
+      "criptografico",
+      "criptográfica",
+      "criptografica",
+      "urnas eletrônicas",
+      "urnas eletronicas",
+      "tse",
+      "cepesc",
+      "libharpia",
+      "eleições",
+      "eleicoes",
+      "segurança das comunicações",
+      "seguranca das comunicacoes"
+    ],
+    negativos: [
+      "futebol",
+      "novela",
+      "celebridade",
+      "show",
+      "festival",
+      "reality show",
+      "inteligência artificial",
+      "inteligencia artificial",
+      "desigualdade",
+      "lula erra",
+      "américa do sul",
+      "america do sul",
+      "festival da fronteira",
+      "festival de cinema",
+      "assembleia do rs"
+    ]
+  };
+}
 
   // ===== CHILE / ANI =====
   if (p === "CHILE") {
@@ -1216,72 +1434,164 @@ function obtenerReglas(pais, acronimo) {
   }
 
   // ===== ITALIA / DIS / AISE / AISI =====
-  if (p === "ITALIA") {
+if (p === "ITALIA") {
+
+  if (a === "AISE") {
+    return {
+      positivos: [
+        "agenzia informazioni e sicurezza esterna",
+        "italian intelligence",
+        "intelligence italiana",
+        "servizi segreti italiani",
+        "servizio segreto italiano",
+        "spy",
+        "spies",
+        "espionage",
+        "counterintelligence",
+        "controspionaggio",
+        "sicurezza nazionale",
+        "agente segreto",
+        "agenti segreti",
+        "operazione di intelligence",
+        "007"
+      ],
+      negativos: [
+        "aise.it",
+        "www.aise.it",
+        "made in italy",
+        "camara de comercio",
+        "cámara de comercio",
+        "camera di commercio",
+        "commercio",
+        "commercio estero",
+        "imprese italiane",
+        "rappresentanza permanente",
+        "onu",
+        "eventi",
+        "evento",
+        "incontro",
+        "roadshow",
+        "community",
+        "vetrina",
+        "soiree",
+        "soirée",
+        "vino",
+        "spumante",
+        "mercati",
+        "export",
+        "canada",
+        "croazia",
+        "croatia",
+        "luxe",
+        "automobile",
+        "ambasciata",
+        "ambasciatore",
+        "diplomazia",
+        "cooperazione",
+        "relazioni commerciali",
+        "forum economico",
+        "business forum",
+        "ministero degli esteri",
+        "ministero esteri",
+        "ministero delle imprese",
+        "lavora con noi",
+        "offerta di lavoro",
+        "recruiting",
+        "vacancy",
+        "job",
+        "career",
+        "careers",
+        "stage",
+        "internship",
+        "bando",
+        "concorso",
+        "data engineer",
+        "revenue",
+        "profit",
+        "stock",
+        "market",
+        "trading",
+        "tradingview",
+        "earnings",
+        "financial",
+        "shares",
+        "investor",
+        "guidance",
+        "forecast",
+        "full-year",
+        "economic",
+        "quarter",
+        "results",
+        "nav",
+        "bond market",
+        "cash flow",
+        "borsa",
+        "finanza",
+        "finanziario",
+        "economia",
+        "economico",
+        "investimenti",
+        "startup"
+      ]
+    };
+  }
+
+  if (a === "DIS") {
+    return {
+      positivos: [
+        "dipartimento delle informazioni per la sicurezza",
+        "intelligence italiana",
+        "servizi segreti italiani",
+        "servizio segreto italiano",
+        "sicurezza nazionale italiana",
+        "italian intelligence",
+        "vittorio rizzi",
+        "rizzi"
+      ],
+      negativos: [
+        "revenue",
+        "profit",
+        "stock",
+        "market",
+        "trading",
+        "tradingview",
+        "earnings",
+        "financial",
+        "shares",
+        "investor",
+        "guidance",
+        "forecast",
+        "full-year",
+        "economic",
+        "quarter",
+        "results",
+        "nav",
+        "bond market",
+        "cash flow"
+      ]
+    };
+  }
+
   return {
     positivos: [
-      "dis",
-      "aise",
-      "aisi",
-      "dipartimento delle informazioni per la sicurezza",
-      "agenzia informazioni e sicurezza esterna",
-      "agenzia informazioni e sicurezza interna",
+      "servizi segreti",
       "intelligence italiana",
-      "servizi segreti italiani",
-      "servizio segreto italiano",
-      "italian intelligence",
-      "counterintelligence",
-      "espionage",
-      "spy",
-      "spionaggio",
-      "sicurezza nazionale"
+      "agenzia informazioni e sicurezza interna",
+      "aisi",
+      "sicurezza interna"
     ],
     negativos: [
-      "revenue",
-      "profit",
-      "stock",
-      "market",
-      "trading",
-      "tradingview",
-      "earnings",
-      "financial",
-      "shares",
-      "investor",
-      "guidance",
-      "forecast",
-      "full-year",
-      "economic",
-      "quarter",
-      "results",
-      "nav",
-      "bond market",
-      "cash flow",
-
-      "made in italy",
-      "camara de comercio",
-      "cámara de comercio",
-      "commercio",
-      "imprese italiane",
-      "rappresentanza permanente",
-      "onu",
-      "eventi",
-      "incontro",
-      "roadshow",
-      "community",
-      "vetrina",
-      "soiree",
-      "soirée",
-      "vino",
-      "spumante",
-      "mercati",
-      "export",
-      "canada",
-      "croazia",
-      "croatia",
-      "luxe",
-      "automobile"
+      "fashion",
+      "festival",
+      "celebrity",
+      "movie",
+      "series",
+      "football",
+      "soccer"
     ]
   };
 }
+ 
 
   // ===== PAÍSES BAJOS / AIVD / MIVD =====
   if (p === "PAISES BAJOS" || a === "AIVD" || a === "MIVD") {
@@ -1321,22 +1631,144 @@ function obtenerReglas(pais, acronimo) {
     };
   }
 
-  // ===== RUSIA / SVR / FSB =====
-  if (p === "RUSIA" || a === "SVR" || a === "FSB") {
-    return {
-      positivos: [
-        "fsb", "svr", "russian intelligence", "russian security", "espionage", "spy",
-        "security service", "counterintelligence", "navalny", "agent", "repression",
-        "terrorist", "terrorismo", "inteligencia", "servicio de seguridad"
-      ],
-      negativos: [
-        "range rover", "land rover", "sport sv", "svr model", "ultimate edition", "horsepower",
-        "v8", "engine", "supercharged", "top gear", "car review", "auto", "motor", "0-60",
-        "hiconsumption", "edition", "tribute"
-      ]
-    };
-  }
+  // ===== RUSIA / FSB =====
+if (p === "RUSIA" && a === "FSB") {
+  return {
+    positivos: [
+      "fsb",
+      "federal security service",
+      "russian security service",
+      "counterintelligence",
+      "domestic security",
+      "internal security",
+      "terrorism",
+      "anti-terror",
+      "counterterrorism",
+      "navalny",
+      "repression",
+      "sabotage"
+    ],
+    negativos: [
+      "range rover", "land rover", "sport sv", "svr model", "ultimate edition", "horsepower",
+      "v8", "engine", "supercharged", "top gear", "car review", "auto", "motor", "0-60",
+      "hiconsumption", "edition", "tribute"
+    ]
+  };
+}
 
+// ===== RUSIA / SVR =====
+if (p === "RUSIA" && a === "SVR") {
+  return {
+    positivos: [
+      "svr",
+      "foreign intelligence service",
+      "external intelligence",
+      "russian foreign intelligence",
+      "espionage",
+      "spy",
+      "spies",
+      "agent",
+      "covert operation"
+    ],
+    negativos: [
+      "range rover", "land rover", "sport sv", "svr model", "ultimate edition", "horsepower",
+      "v8", "engine", "supercharged", "top gear", "car review", "auto", "motor", "0-60",
+      "hiconsumption", "edition", "tribute"
+    ]
+  };
+}
+
+// ===== RUSIA / GRU =====
+if (p === "RUSIA" && a === "GRU") {
+  return {
+    positivos: [
+      "gru",
+      "russian military intelligence",
+      "military intelligence",
+      "espionage",
+      "spy",
+      "spies",
+      "agent",
+      "sabotage",
+      "covert operation"
+    ],
+    negativos: [
+      "range rover", "land rover", "sport sv", "svr model", "ultimate edition", "horsepower",
+      "v8", "engine", "supercharged", "top gear", "car review", "auto", "motor", "0-60",
+      "hiconsumption", "edition", "tribute"
+    ]
+  };
+}
+
+  // ===== RUSIA / RUSINT =====
+  if (p === "RUSIA" && a === "RUSINT") {
+  return {
+    positivos: [
+      "russian intelligence",
+      "russia intelligence",
+      "russian spy",
+      "russian spies",
+      "russian espionage",
+      "espionage",
+      "spy",
+      "spies",
+      "sabotage",
+      "covert operation",
+      "wagner",
+      "russian operatives",
+      "sharing intelligence",
+      "intelligence information",
+      "intelligence support",
+      "iran",
+      "europe",
+      "europa",
+      "sabotaje",
+      "espionaje",
+      "inteligencia",
+      "intel",
+      "informacion de inteligencia",
+      "información de inteligencia",
+      "transmitiendo información de inteligencia",
+      "pasar información de inteligencia",
+      "enviar inteligencia",
+      "inteligencia y entrenamiento",
+      "target and kill americans"
+    ],
+    negativos: [
+      "range rover",
+      "land rover",
+      "sport sv",
+      "svr model",
+      "ultimate edition",
+      "horsepower",
+      "v8",
+      "engine",
+      "supercharged",
+      "top gear",
+      "car review",
+      "auto",
+      "motor",
+      "0-60",
+      "hiconsumption",
+      "edition",
+      "tribute",
+      "ayuda médica",
+      "ayuda medica",
+      "consejo de seguridad",
+      "onu",
+      "g7",
+      "rubio",
+      "sesión a puerta cerrada",
+      "sesion a puerta cerrada",
+      "ataques contra civiles",
+      "estrategia de trump",
+      "apoyo de rusia a iran",
+      "maquinaria de guerra",
+      "petróleo",
+      "petroleo"
+    ]
+  };
+}  
   // ===== UCRANIA / SBU / SSU =====
   if (p === "UCRANIA" || a === "SBU" || a === "SSU") {
     return {
@@ -1847,20 +2279,20 @@ function evaluarBloqueItaliaDIS(ctx) {
 
   const contextoItaliaDIS = contieneAlguno(titNorm, [
     "dipartimento delle informazioni per la sicurezza",
-    "intelligence italiana",
-    "servizi segreti italiani",
-    "servizio segreto italiano",
     "sicurezza nazionale italiana",
     "intelligence italy",
     "italian intelligence",
-    "agenzia informazioni e sicurezza",
-    "ai se",
-    "ai si",
-    "dis italia",
-    "italia",
-    "italian"
+    "vittorio rizzi",
+    "counterintelligence",
+    "controspionaggio",
+    "espionage",
+    "spy",
+    "spies",
+    "operazione di intelligence",
+    "agente segreto",
+    "agenti segreti"
   ]);
-
+  
   const ruidoFinanciero = contieneAlguno(titNorm, [
     "revenue",
     "profit",
@@ -1884,6 +2316,24 @@ function evaluarBloqueItaliaDIS(ctx) {
     "cash flow"
   ]);
 
+  const ruidoAiseResidual = contieneAlguno(titNorm, [
+    "aise.it",
+    "agenzia internazionale stampa estero",
+    "festival italiano",
+    "design italiano",
+    "giornata del design",
+    "brand italia",
+    "concorso di fotografia",
+    "ambasciatore",
+    "ambasciatrice",
+    "inaugurazione",
+    "imprese",
+    "webinar",
+    "agroalimentare",
+    "bellezza",
+    "acconciatura"
+  ]);
+
   if (ruidoFinanciero) {
     return {
       valido: false,
@@ -1893,18 +2343,27 @@ function evaluarBloqueItaliaDIS(ctx) {
     };
   }
 
+  if (ruidoAiseResidual) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Italia/DIS ruido Aise.it residual`
+    };
+  }
+
   if (!coincidePaisAcronimo(p, a, titNorm) && !contextoItaliaDIS) {
     return sinDecision();
   }
 
   const valido = !tieneNegativo && (
     identidadNombre ||
-    contextoItaliaDIS ||
     (identidadAcronimo && contextoItaliaDIS) ||
     rescatePorSenalesFuertes
   );
 
   if (!valido) return sinDecision();
+
 
   return {
     valido: true,
@@ -2223,7 +2682,7 @@ function evaluarBloqueFranciaDGSE(ctx) {
   if (!(p === "FRANCIA" && a === "DGSE")) return sinDecision();
   if (!coincidePaisAcronimo(p, a, titNorm)) return sinDecision();
 
-  const contextoDGSE = contieneAlguno(titNorm, [
+    const contextoDGSE = contieneAlguno(titNorm, [
     "dgse",
     "direction generale de la securite exterieure",
     "direction générale de la sécurité extérieure",
@@ -2232,9 +2691,18 @@ function evaluarBloqueFranciaDGSE(ctx) {
     "intelligence exterieure",
     "intelligence extérieure",
     "french intelligence",
+    "french foreign intelligence",
+    "french external intelligence",
     "foreign intelligence",
     "espionage",
-    "spy"
+    "spy",
+    "spies",
+    "agent secret",
+    "agents secrets",
+    "operation clandestine",
+    "opération clandestine",
+    "service secret français",
+    "services secrets français"
   ]);
 
   const contextoDGSI = contieneAlguno(titNorm, [
@@ -2276,6 +2744,41 @@ function evaluarBloqueFranciaDGSE(ctx) {
     "profil"
   ]);
 
+    const ruidoFranciaInstitucionalLaboral = contieneAlguno(titNorm, [
+      "concours",
+      "reforme du concours",
+      "réforme du concours",
+      "attaché",
+      "attache",
+      "recrutement",
+      "recrute",
+      "recrutez",
+      "carriere",
+      "carrière",
+      "carrieres",
+      "carrières",
+      "offre d'emploi",
+      "offres d'emploi",
+      "emploi",
+      "emplois",
+      "stage",
+      "stages",
+      "alternance",
+      "formation",
+      "campus",
+      "metiers",
+      "métiers",
+      "devenir analyste",
+      "devenir agent",
+      "devenir officier",
+      "ressources humaines",
+      "rh",
+      "salaire",
+      "candidature",
+      "poste a pourvoir",
+      "poste à pourvoir"
+    ]);
+
   if (ruidoFranciaHistorico) {
     return {
       valido: false,
@@ -2284,6 +2787,15 @@ function evaluarBloqueFranciaDGSE(ctx) {
       motivo: `${motivoBase} | Francia/DGSE histórico-divulgativo`
     };
   }
+
+    if (ruidoFranciaInstitucionalLaboral) {
+      return {
+        valido: false,
+        score: score,
+        categoria: categoria,
+        motivo: `${motivoBase} | Francia/DGSE institucional-laboral`
+      };
+    }
 
   // Si el título es claramente de DGSI y no de DGSE, descartamos para evitar mezcla interna.
   if (contextoDGSI && !contextoDGSE) {
@@ -2295,13 +2807,12 @@ function evaluarBloqueFranciaDGSE(ctx) {
     };
   }
 
-  const valido = !tieneNegativo && (
-    identidadNombre ||
-    contextoDGSE ||
-    (identidadAcronimo && contextoDGSE) ||
-    (mencionaPais && score >= 2 && contextoDGSE) ||
-    rescatePorSenalesFuertes
-  );
+    const valido = !tieneNegativo && !ruidoFranciaInstitucionalLaboral && (
+      identidadNombre ||
+      (identidadAcronimo && contextoDGSE) ||
+      (mencionaPais && score >= 2 && contextoDGSE) ||
+      rescatePorSenalesFuertes
+    );
 
   if (!valido) return sinDecision();
 
@@ -3189,23 +3700,67 @@ function evaluarNoticia(titulo, pais, acronimo, nombreLargo) {
   }
 
   // ===== BRASIL / ABIN =====
-  if (p === "BRASIL" || a === "ABIN") {
-    const contextoBrasil = contieneAlguno(titNorm, [
-      "abin", "agencia brasileira de inteligencia", "brazilian intelligence", "intelligence agency",
-      "espionage", "spy", "counterintelligence", "abin paralela"
-    ]);
+if (p === "BRASIL" || a === "ABIN") {
+  const contextoBrasil = contieneAlguno(titNorm, [
+    "abin",
+    "agencia brasileira de inteligencia",
+    "agência brasileira de inteligência",
+    "brazilian intelligence",
+    "intelligence agency",
+    "espionage",
+    "spy",
+    "counterintelligence",
+    "abin paralela",
+    "garimpo",
+    "garimpeiro",
+    "mercurio",
+    "mercúrio",
+    "mineração ilegal",
+    "mineracao ilegal",
+    "contrabando",
+    "crime ambiental",
+    "terra indígena",
+    "terra indigena",
+    "sararé",
+    "sarare",
+    "megaoperação",
+    "megaoperacao",
+    "operação",
+    "operacao",
+    "polícia federal",
+    "policia federal",
+    "ibama",
+    "funai",
+    "casa civil"
+  ]);
 
-    const valido = !tieneNegativo && (
-      identidadNombre || identidadAcronimo || contextoBrasil || (mencionaPais && score >= 4)
-    );
+  const contextoBrasilInstitucional = contieneAlguno(titNorm, [
+    "escolas",
+    "violência",
+    "violencia",
+    "prevenção",
+    "prevencao",
+    "segurança",
+    "seguranca",
+    "governo"
+  ]);
 
-    return {
-      valido: valido,
-      score: score,
-      categoria: categoria,
-      motivo: valido ? `${motivoBase} | Brasil fuerte` : `${motivoBase} | Brasil ruido o contexto débil`
-    };
-  }
+  const valido = !tieneNegativo && (
+    identidadNombre ||
+    identidadAcronimo ||
+    contextoBrasil ||
+    contextoBrasilInstitucional ||
+    (mencionaPais && score >= 4) ||
+    (mencionaPais && score >= 3 && contextoBrasil)
+  );
+
+  return {
+    valido: valido,
+    score: score,
+    categoria: categoria,
+    motivo: valido ? `${motivoBase} | Brasil fuerte` : `${motivoBase} | Brasil ruido o contexto débil`
+  };
+}
 
   // ===== ECUADOR / CNI / CIES =====
   /*if (p === "ECUADOR" || a === "CNI" || a === "CIES") {
@@ -3735,33 +4290,305 @@ function evaluarNoticia(titulo, pais, acronimo, nombreLargo) {
     };
   }
   
-  // ===== RUSIA / SVR / FSB =====
-  if (p === "RUSIA" || a === "SVR" || a === "FSB") {
-    const contextoRusoFuerte = contieneAlguno(titNorm, [
-      "fsb", "svr", "federal security service", "foreign intelligence service", "russian intelligence",
-      "russian security service", "espionage", "spy", "counterintelligence", "navalny", "agent", "cyber attack", "cyberwar", "sabotage", "infrastructure", "internet shutdown", 
-      "mobile network", "telecommunications", "critical infrastructure",
-      //español
-      "ciberataque", "ciberataques", "sabotaje", "infraestructura critica", "infraestructura crítica", "internet", "telefonia movil", "telefonía móvil", "red movil", "red móvil"
-    ]);
+  // ===== RUSIA / FSB =====
+if (p === "RUSIA" && a === "FSB") {
+  const contextoFSB = contieneAlguno(titNorm, [
+    "fsb",
+    "federal security service",
+    "russian security service",
+    "counterintelligence",
+    "domestic security",
+    "internal security",
+    "security service",
+    "terrorism",
+    "anti-terror",
+    "counterterrorism",
+    "sabotage",
+    "navalny",
+    "agent",
+    "repression"
+  ]);
 
-    const contextoRusoDebil = contieneAlguno(titNorm, ["russia", "russian", "security", "terrorism"]);
+  const contextoSVR = contieneAlguno(titNorm, [
+    "svr",
+    "foreign intelligence service",
+    "external intelligence"
+  ]);
 
-    const valido = !tieneNegativo && (
-      identidadNombre ||
-      identidadAcronimo ||
-      contextoRusoFuerte ||
-      (mencionaPais && score >= 4 && !contextoRusoDebil)
-    );
+  const contextoGRU = contieneAlguno(titNorm, [
+    "gru",
+    "russian military intelligence",
+    "military intelligence"
+  ]);
 
+  if ((contextoSVR || contextoGRU) && !contextoFSB) {
     return {
-      valido: valido,
+      valido: false,
       score: score,
       categoria: categoria,
-      motivo: valido ? `${motivoBase} | Rusia fuerte` : `${motivoBase} | Rusia ruido o contexto débil`
+      motivo: `${motivoBase} | Rusia/FSB colisión con SVR/GRU`
     };
   }
 
+  const ruidoNoAtribuido = contieneAlguno(titNorm, [
+    "ssu",
+    "sbu",
+    "ukrainian ssu",
+    "ukrainian security service"
+  ]);
+
+  if (ruidoNoAtribuido && !identidadNombre && !identidadAcronimo) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Rusia/FSB no atribuido`
+    };
+  }
+  
+  const valido = !tieneNegativo && (
+    identidadNombre ||
+    identidadAcronimo ||
+    (contextoFSB && (identidadAcronimo || identidadNombre))
+  );
+
+  return {
+    valido: valido,
+    score: score,
+    categoria: categoria,
+    motivo: valido ? `${motivoBase} | Rusia/FSB fuerte` : `${motivoBase} | Rusia/FSB ruido o contexto débil`
+  };
+}
+
+// ===== RUSIA / SVR =====
+if (p === "RUSIA" && a === "SVR") {
+  const contextoSVR = contieneAlguno(titNorm, [
+    "svr",
+    "foreign intelligence service",
+    "external intelligence",
+    "russian foreign intelligence",
+    "spy",
+    "spies",
+    "espionage",
+    "agent",
+    "covert operation"
+  ]);
+
+  const contextoFSB = contieneAlguno(titNorm, [
+    "fsb",
+    "federal security service",
+    "counterintelligence",
+    "domestic security"
+  ]);
+
+  const contextoGRU = contieneAlguno(titNorm, [
+    "gru",
+    "russian military intelligence",
+    "military intelligence"
+  ]);
+
+  if ((contextoFSB || contextoGRU) && !contextoSVR) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Rusia/SVR colisión con FSB/GRU`
+    };
+  }
+
+  const valido = !tieneNegativo && (
+    identidadNombre ||
+    identidadAcronimo ||
+    (contextoSVR && (identidadAcronimo || identidadNombre))
+  );
+
+  return {
+    valido: valido,
+    score: score,
+    categoria: categoria,
+    motivo: valido ? `${motivoBase} | Rusia/SVR fuerte` : `${motivoBase} | Rusia/SVR ruido o contexto débil`
+  };
+}
+
+// ===== RUSIA / GRU =====
+if (p === "RUSIA" && a === "GRU") {
+  const contextoGRU = contieneAlguno(titNorm, [
+    "gru",
+    "russian military intelligence",
+    "military intelligence",
+    "intel unit",
+    "covert operation",
+    "sabotage",
+    "agent"
+  ]);
+
+  const contextoFSB = contieneAlguno(titNorm, [
+    "fsb",
+    "federal security service",
+    "counterintelligence",
+    "domestic security"
+  ]);
+
+  const contextoSVR = contieneAlguno(titNorm, [
+    "svr",
+    "foreign intelligence service",
+    "external intelligence"
+  ]);
+
+  if ((contextoFSB || contextoSVR) && !contextoGRU) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Rusia/GRU colisión con FSB/SVR`
+    };
+  }
+
+  const valido = !tieneNegativo && (
+    identidadNombre ||
+    identidadAcronimo ||
+    (contextoGRU && (identidadAcronimo || identidadNombre))
+  );
+
+  return {
+    valido: valido,
+    score: score,
+    categoria: categoria,
+    motivo: valido ? `${motivoBase} | Rusia/GRU fuerte` : `${motivoBase} | Rusia/GRU ruido o contexto débil`
+  };
+}
+
+  // ===== RUSIA / RUSINT =====
+if (p === "RUSIA" && a === "RUSINT") {
+  const contextoRusiaInteligencia = contieneAlguno(titNorm, [
+    "russian intelligence",
+    "russia intelligence",
+    "russian spy",
+    "russian spies",
+    "russian espionage",
+    "espionage",
+    "spy",
+    "spies",
+    "sabotage",
+    "covert operation",
+    "wagner",
+    "russian operatives",
+    "sharing intelligence",
+    "intelligence information",
+    "intelligence support",
+    "iran",
+    "europe",
+    "europa",
+    "sabotaje",
+    "espionaje",
+    "inteligencia"
+  ]);
+
+  const contextoAgenciaEspecifica = contieneAlguno(titNorm, [
+    "fsb",
+    "federal security service",
+    "svr",
+    "foreign intelligence service",
+    "gru",
+    "russian military intelligence",
+    "military intelligence"
+  ]);
+
+  const ruidoRusia = contieneAlguno(titNorm, [
+    "range rover",
+    "land rover",
+    "sport sv",
+    "svr model",
+    "ultimate edition",
+    "horsepower",
+    "v8",
+    "engine",
+    "supercharged",
+    "top gear",
+    "car review",
+    "auto",
+    "motor",
+    "0-60",
+    "hiconsumption",
+    "edition",
+    "tribute",
+    "ayuda médica",
+    "ayuda medica",
+    "consejo de seguridad",
+    "onu",
+    "g7",
+    "rubio",
+    "sesión a puerta cerrada",
+    "sesion a puerta cerrada",
+    "ataques contra civiles",
+    "estrategia de trump",
+    "apoyo de rusia a iran",
+    "maquinaria de guerra",
+    "petróleo",
+    "petroleo"
+  ]);
+
+    const senalFuerteRUSINT = contieneAlguno(titNorm, [
+      "sharing intelligence",
+      "intelligence information",
+      "intelligence support",
+      "russian intelligence",
+      "russian espionage",
+      "russian spies",
+      "wagner",
+      "russian operatives",
+      "sabotage in europe",
+      "espionage in europe",
+
+      // inglés
+      "intel",
+      "helping iran with intel",
+      "target and kill americans",
+
+      // español
+      "informacion de inteligencia",
+      "información de inteligencia",
+      "transmitiendo informacion de inteligencia",
+      "transmitiendo información de inteligencia",
+      "pasar informacion de inteligencia",
+      "pasar información de inteligencia",
+      "enviar inteligencia",
+      "inteligencia y entrenamiento",
+      "proporciono inteligencia",
+      "proporcionó inteligencia"
+    ]);
+
+  if (ruidoRusia) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Rusia/RUSINT ruido`
+    };
+  }
+
+  if (contextoAgenciaEspecifica) {
+    return {
+      valido: false,
+      score: score,
+      categoria: categoria,
+      motivo: `${motivoBase} | Rusia/RUSINT colisión con agencia específica`
+    };
+  }
+
+  const valido = !tieneNegativo && (
+    senalFuerteRUSINT ||
+    (mencionaPais && score >= 3 && senalFuerteRUSINT)
+  );
+
+  return {
+    valido: valido,
+    score: score,
+    categoria: categoria,
+    motivo: valido ? `${motivoBase} | Rusia/RUSINT fuerte` : `${motivoBase} | Rusia/RUSINT ruido o contexto débil`
+  };
+}
+  
   // ===== UCRANIA / SSU / SBU =====
   if (p === "UCRANIA" || a === "SSU" || a === "SBU") {
     const contextoUcrania = contieneAlguno(titNorm, [
@@ -3875,13 +4702,72 @@ function evaluarNoticia(titulo, pais, acronimo, nombreLargo) {
   "túnel",
   "crimen organizado",
   "organizacion criminal",
-  "organización criminal"
+  "organización criminal",
+
+    // NUEVO
+  "mercurio",
+  "mineria ilegal",
+  "minería ilegal",
+  "garimpo",
+  "garimpeiro",
+  "contrabando",
+  "tráfico ilegal",
+  "extraccion ilegal",
+  "extracción ilegal",
+  "crimen ambiental"
 ]);
 
 const contextoFrontera = contieneAlguno(titNorm, [
   "frontera",
   "border",
-  "cross-border"
+  "cross-border",
+  "rondonia",
+  "ro",
+  "frontera",
+  "border"
+]);
+
+const contextoInstitucional = contieneAlguno(titNorm, [
+  "prevencao",
+  "prevenção",
+  "escuelas",
+  "escolas",
+  "educacion",
+  "educação",
+  "cooperacion",
+  "cooperación",
+  "estrategias",
+  "estratégias",
+  "programa",
+  "plan",
+  "acciones",
+  "iniciativa",
+  "gobierno",
+  "ministerio"
+]);
+
+const contextoBrasilOperativo = contieneAlguno(titNorm, [
+  "garimpo",
+  "garimpeiro",
+  "mercurio",
+  "mercúrio",
+  "mineração ilegal",
+  "mineracao ilegal",
+  "contrabando",
+  "crime ambiental",
+  "terra indígena",
+  "terra indigena",
+  "sararé",
+  "sarare",
+  "megaoperação",
+  "megaoperacao",
+  "operação",
+  "operacao",
+  "polícia federal",
+  "policia federal",
+  "ibama",
+  "funai",
+  "casa civil"
 ]);
 
 // 🔥 RESCATE CONTROLADO
@@ -3890,13 +4776,57 @@ if (
   contextoFrontera &&
   !tieneNegativo
 ) {
+
+  // ===== BLOQUEO DIS ITALIA DENTRO DEL RESCATE =====
+  if (
+    pais === "ITALIA" &&
+    acronimo === "DIS" &&
+    score <= 1 &&
+    mencionaPais &&
+    !tieneSenalPositivaDura(titNorm, pais, acronimo)
+  ) {
+    return {
+      valido: false,
+      score: 0,
+      categoria: categoria,
+      motivo: "score=0 | flags=sin_senales | Italia/DIS bloqueado en rescate"
+    };
+  }
+
   return {
     valido: true,
-    score: score + 2,
+    score: score,
     categoria: categoria,
-    motivo: `${motivoBase} | Rescate crimen organizado transnacional`
+    motivo: `${motivoBase} | Rescate controlado`
   };
 }
+
+// ===== AJUSTE BRASIL ABIN (COOPERACIÓN INSTITUCIONAL) =====
+if (
+  pais === "BRASIL" &&
+  acronimo === "ABIN" &&
+  contextoInstitucional
+) {
+  score = Math.min(score, 2);
+}
+
+// ===== RESCATE BRASIL / ABIN OPERATIVO =====
+if (
+  pais === "BRASIL" &&
+  acronimo === "ABIN" &&
+  contextoBrasilOperativo &&
+  mencionaPais &&
+  !tieneNegativo
+) {
+  return {
+    valido: true,
+    score: Math.max(score, 3),
+    categoria: categoria,
+    motivo: `${motivoBase} | Brasil operativo`
+  };
+}
+
+// ==== RETURN FINAL ====
   return {
     valido: validoGeneral,
     score: score,
@@ -4024,15 +4954,24 @@ function ejecutarConsultasAgencias(pais, nombreLargo, acronimo, directivos, fech
   let ceid = "US:en";
   let queries = [];
 
-  // ===== ALEMANIA / BND / BFV =====
-  if (p === "ALEMANIA" || a === "BND" || a === "BFV") {
-    ejecutarRss('("BfV" OR "BND" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz" OR "Bundesnachrichtendienst")', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("Verfassungsschutz" OR "Bundesamt für Verfassungsschutz" OR "BfV") (Deutschland OR Geheimdienst OR Spionage OR Extremismus OR Präsident OR Praesident)', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+  // ===== ALEMANIA / BND =====
+  if (p === "ALEMANIA" && a === "BND") {
+    ejecutarRss('("BND" OR "Bundesnachrichtendienst")', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BND" OR "Bundesnachrichtendienst") (Spionage OR Gegenspionage OR Geheimdienst OR Auslandsgeheimdienst OR Sabotage OR Cyberspionage)', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BND" OR "Bundesnachrichtendienst" OR "German foreign intelligence" OR "German intelligence" OR "Germany\'s BND")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BND" OR "Bundesnachrichtendienst") (espionage OR counterintelligence OR sabotage OR "cyber espionage")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BND" OR "Bundesnachrichtendienst" OR "inteligencia exterior alemana")', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    return;
+  }
+
+  // ===== ALEMANIA / BFV =====
+  if (p === "ALEMANIA" && a === "BFV") {
+    ejecutarRss('("BfV" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz")', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("Verfassungsschutz" OR "Bundesamt für Verfassungsschutz" OR "BfV") (Deutschland OR Geheimdienst OR Spionage OR Extremismus OR Präsident OR Praesident OR Sabotage)', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
     ejecutarRss('("Verfassungsschutz" OR "Bundesamt für Verfassungsschutz") ("neuer Mann" OR Präsident OR Praesident OR Chef OR Leitung)', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("BfV" OR "BND" OR "Verfassungsschutz" OR "Bundesnachrichtendienst") (Spionage OR Gegenspionage OR Geheimdienst OR Terrorismus OR Sabotage)', "de", "DE", "DE:de", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("BfV" OR "BND" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz" OR "Bundesnachrichtendienst" OR "German intelligence" OR "German domestic intelligence")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("BfV" OR "BND" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz") (espionage OR counterintelligence OR sabotage OR Russia OR Russian)', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("BfV" OR "BND" OR "Verfassungsschutz" OR "Bundesamt para la Protección de la Constitución" OR "inteligencia alemana" OR "contrainteligencia alemana")', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BfV" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz" OR "German domestic intelligence")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BfV" OR "Verfassungsschutz" OR "Bundesamt für Verfassungsschutz") (espionage OR counterintelligence OR sabotage OR Russia OR Russian OR "critical infrastructure" OR "energy sector")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("BfV" OR "Verfassungsschutz" OR "Bundesamt para la Protección de la Constitución" OR "contrainteligencia alemana")', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
     return;
   }
 
@@ -4054,13 +4993,27 @@ function ejecutarConsultasAgencias(pais, nombreLargo, acronimo, directivos, fech
   }
 
   // ===== BRASIL / ABIN =====
-  if (p === "BRASIL" || a === "ABIN") {
-    ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia") Brasil', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência") espionagem OR inteligência OR "abin paralela"', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss(construirQueryTematica('"ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia" OR "Brasil"'), "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    return;
-  }
+if (p === "BRASIL" || a === "ABIN") {
+  ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia") Brasil', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
 
+  ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia") (espionagem OR inteligência OR "abin paralela" OR contrainteligência OR contrainteligencia)', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+
+  ejecutarRss(construirQueryTematica('"ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia" OR "Brasil"'), "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+
+  // Cobertura operativa: frontera, garimpo, mercurio, crimen ambiental
+  ejecutarRss('("Brasil" OR "Rondônia" OR "Rondonia" OR RO) (mercúrio OR mercurio OR garimpo OR garimpeiro OR "mineração ilegal" OR "mineracao ilegal" OR contrabando OR "crime ambiental" OR fronteira) ("ABIN" OR inteligência OR inteligência brasileira OR segurança)', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+
+  // Cobertura institucional: cooperación con gobiernos/escuelas/prevención
+  ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia") (escolas OR violência OR violencia OR prevenção OR prevencao OR segurança OR governo)', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+
+  // Cobertura amplia crimen/frontera SIN dependencia de ABIN
+  ejecutarRss('("Brasil" OR "Rondônia" OR "Rondonia" OR RO) (mercúrio OR mercurio OR garimpo OR garimpeiro OR "mineração ilegal" OR "mineracao ilegal" OR contrabando OR "crime ambiental" OR fronteira)', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+  
+  // Cobertura ABIN / criptografia / urnas / TSE
+  ejecutarRss('("ABIN" OR "Agência Brasileira de Inteligência" OR "Agencia Brasileira de Inteligencia" OR Cepesc) (criptografia OR criptográfico OR criptografica OR "urnas eletrônicas" OR "urnas eletronicas" OR TSE OR Libharpia OR eleições OR eleicoes)', "pt", "BR", "BR:pt", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+
+    return;
+}
   // ===== CHILE / ANI =====
   if (p === "CHILE" && a === "ANI") {
     ejecutarRss('("ANI" OR "Agencia Nacional de Inteligencia" OR "inteligencia chilena")', "es", "CL", "CL:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
@@ -4255,16 +5208,36 @@ function ejecutarConsultasAgencias(pais, nombreLargo, acronimo, directivos, fech
     return;
   }
 
-  // ===== RUSIA / SVR / FSB / GRU =====
-  if (p === "RUSIA" || a === "SVR" || a === "FSB" || a === "GRU") {
-    ejecutarRss('("FSB" OR "SVR" OR "GRU") Russia ("intelligence" OR "security service" OR "espionage" OR "spy" OR "counterintelligence")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("FSB" OR "SVR" OR "GRU") Russian intelligence OR Russian spy OR Russian espionage', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('"Russian intelligence" OR "Russian spy" OR "Russian spies" OR "Russian espionage"', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('"Russian security service" OR "Russian security services" OR "Russian foreign intelligence" OR "Russian military intelligence"', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('Russia ("counterintelligence" OR "spy ring" OR "spy network" OR "intelligence operation" OR "espionage case")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('Russia ("cyber attack" OR "cyber espionage" OR "cyber operation") intelligence OR spy', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss('("FSB" OR "SVR" OR "GRU") Russia ("espionage" OR "spy" OR "intelligence operation" OR "covert operation" OR "counterintelligence")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
-    ejecutarRss(construirQueryTematica('"FSB" OR "SVR" OR "GRU" OR "Russian intelligence" OR "Russia"'), "en", "RU", "RU:ru", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+  // ===== RUSIA / FSB =====
+  if (p === "RUSIA" && a === "FSB") {
+    ejecutarRss('("FSB" OR "Federal Security Service" OR "Russian security service")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("FSB" OR "Federal Security Service") Russia ("security service" OR "counterintelligence" OR "domestic security" OR "terrorism" OR "sabotage")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("FSB" OR "Servicio Federal de Seguridad") Rusia (contrainteligencia OR terrorismo OR sabotaje)', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    return;
+  }
+  
+  // ===== RUSIA / SVR =====
+  if (p === "RUSIA" && a === "SVR") {
+    ejecutarRss('("SVR" OR "Foreign Intelligence Service" OR "Russian foreign intelligence")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("SVR" OR "Foreign Intelligence Service") Russia ("foreign intelligence" OR "espionage" OR "spy" OR "covert operation")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("SVR" OR "Servicio de Inteligencia Exterior") Rusia (espionaje OR espía OR agente)', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    return;
+  }
+
+  // ===== RUSIA / GRU =====
+  if (p === "RUSIA" && a === "GRU") {
+    ejecutarRss('("GRU" OR "Russian military intelligence" OR "Main Intelligence Directorate")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("GRU" OR "Russian military intelligence") Russia ("military intelligence" OR "espionage" OR "spy" OR "sabotage" OR "covert operation")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("GRU" OR "inteligencia militar rusa") (espionaje OR espía OR sabotaje)', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    return;
+  }
+
+  // ===== RUSIA / RUSINT =====
+  if (p === "RUSIA" && a === "RUSINT") {
+    ejecutarRss('("Russian intelligence" OR "Russia intelligence" OR "Russian spy" OR "Russian spies" OR "Russian espionage")', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('Russia ("sharing intelligence" OR "intelligence information" OR "intelligence support") (Iran OR Europe OR sabotage OR espionage)', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('("Wagner" OR "Russian operatives") (Europe OR sabotage OR espionage OR covert operation)', "en", "US", "US:en", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
+    ejecutarRss('Rusia ("inteligencia" OR "espionaje" OR "sabotaje") (Irán OR Europa OR Wagner)', "es", "AR", "AR:es", pais, acronimo, nombreLargo, directivos, fechaCorte, ahora, hojaDestino);
     return;
   }
 
@@ -4302,115 +5275,175 @@ function ejecutarRss(q, hl, gl, ceid, pais, acronimo, nombreLargo, directivos, f
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=${gl}&ceid=${ceid}&tbs=qdr:d2`;
 
   try {
-    const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-    const xml = response.getContentText();
-
-    if (!xml || xml.trim() === "") {
-      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "RSS vacío");
-      return;
-    }
-
-    const doc = XmlService.parse(xml);
-    const root = doc.getRootElement();
-    const channel = root.getChild("channel");
-
-    if (!channel) {
-      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "RSS sin channel");
-      return;
-    }
-
-    const items = channel.getChildren("item").slice(0, 8);
-
-    items.forEach(item => {
-      const titulo = item.getChildText("title") || "";
-      const pubDateText = item.getChildText("pubDate") || "";
-      const link = item.getChildText("link") || "";
-      const pubDate = new Date(pubDateText);
-
-      const linkNorm = normalizarTexto(link);
-      const tituloNorm = normalizarTexto(titulo);
-
-      if (linkNorm.includes("aol.com") || linkNorm.includes("msn.com")) {
-        const contextoFuerte = contieneAlguno(tituloNorm, [
-          "intelligence", "espionage", "spy", "counterintelligence", "cyber", "security service",
-          "servizi segreti", "fbi", "cia", "mossad", "bnd", "fsb", "sbu", "ssu", "dni",
-          "hacker", "ransomware", "botnet", "dark web"
-        ]);
-
-        if (!contextoFuerte) {
-          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fuente republicadora (AOL/MSN)");
-          return;
-        }
-      }
-
-      if ((pais || "").toUpperCase() === "ITALIA") {
-        const contextoItaliaFuerte = contieneAlguno(tituloNorm, [
-          "servizi segreti", "intelligence italiana", "cybersicurezza", "crosetto", "rizzi",
-          "dipartimento delle informazioni per la sicurezza", "agenzia informazioni e sicurezza esterna", "aise", "dis", "aisi"
-        ]);
-
-        if (linkNorm.includes("lamilano.it") && !contextoItaliaFuerte) {
-          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: fuente La Milano irrelevante");
-          return;
-        }
-      }
-
-      if (isNaN(pubDate.getTime())) {
-        registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fecha inválida");
-        return;
-      }
-
-      if (pubDate < fechaCorte || pubDate > ahora) {
-        return;
-      }
-
-      const edadDias = Math.floor((ahora.getTime() - pubDate.getTime()) / 86400000);
-      if (edadDias > 7) {
-        registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fecha demasiado antigua");
-        return;
-      }
-
-      if ((pais || "").toUpperCase() === "ITALIA" && (acronimo || "").toUpperCase() === "AISE") {
-        const ruidoAiseMedio = contieneAlguno(tituloNorm, [
-          "expat", "comites", "volontariato", "libro", "famiglie", "colloquio telefonico",
-          "guida completa", "presentazione del libro"
-        ]);
-
-        const contextoInteligenciaAise = contieneAlguno(tituloNorm, [
-          "servizi segreti", "intelligence", "sicurezza", "crosetto", "cybersicurezza", "inchiesta", "indagate", "dis"
-        ]);
-
-        if ((linkNorm.includes("aise.it") || tituloNorm.includes("aise.it")) && !contextoInteligenciaAise) {
-          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: ruido Aise.it");
-          return;
-        }
-
-        if (ruidoAiseMedio && !contextoInteligenciaAise) {
-          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: ruido tematico Aise.it");
-          return;
-        }
-      }
-
-      const evaluacion = evaluarNoticia(titulo, pais, acronimo, nombreLargo);
-
-      if (evaluacion.valido) {
-        registrarLog(pais, acronimo, evaluacion.categoria || "Inteligencia", q, titulo, "ACEPTADO", evaluacion.motivo);
-        escribirFila(hojaDestino, pais, acronimo, evaluacion.categoria || "Inteligencia", titulo, pubDate, link, evaluacion.motivo);
-      } else {
-        const motivo = evaluacion.motivo || "";
-        if (
-          !motivo.toLowerCase().includes("score=") ||
-          motivo.toLowerCase().includes("ruido") ||
-          motivo.toLowerCase().includes("contexto") ||
-          motivo.toLowerCase().includes("ambiguo")
-        ) {
-          registrarLog(pais, acronimo, evaluacion.categoria || "Inteligencia", q, titulo, "DESCARTADO", evaluacion.motivo);
-        }
+    const response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
       }
     });
 
+    const status = response.getResponseCode();
+    const xml = response.getContentText();
+
+    if (status !== 200) {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", `HTTP ${status} en RSS`);
+      Utilities.sleep(800);
+      return;
+    }
+
+    if (!xml || xml.trim() === "") {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "RSS vacío");
+      Utilities.sleep(800);
+      return;
+    }
+
+    const xmlTrim = xml.trim().toLowerCase();
+
+    // Google a veces devuelve HTML/error/rate-limit en vez de XML
+    if (
+      xmlTrim.startsWith("<!doctype html") ||
+      xmlTrim.startsWith("<html") ||
+      (!xmlTrim.startsWith("<?xml") && !xmlTrim.startsWith("<rss"))
+    ) {
+      let motivo = "Respuesta no XML";
+      const xmlNorm = normalizarTexto(xml).slice(0, 500);
+
+      if (xmlNorm.includes("ancho de banda")) motivo = "Se ha superado la cuota de ancho de banda";
+      else if (xmlNorm.includes("rate limit")) motivo = "Rate limit";
+      else if (xmlNorm.includes("too many requests")) motivo = "Too many requests";
+      else if (xmlNorm.includes("unavailable")) motivo = "Servicio no disponible";
+      else if (xmlNorm.includes("captcha")) motivo = "Respuesta con CAPTCHA/bloqueo";
+
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", motivo);
+      Utilities.sleep(1200);
+      return;
+    }
+
+    let doc, root, channel, items;
+    try {
+      doc = XmlService.parse(xml);
+      root = doc.getRootElement();
+      channel = root.getChild("channel");
+
+      if (!channel) {
+        registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "RSS sin channel");
+        Utilities.sleep(800);
+        return;
+      }
+
+      items = channel.getChildren("item").slice(0, 8);
+    } catch (parseErr) {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", `RSS inválido: ${parseErr}`);
+      Utilities.sleep(1200);
+      return;
+    }
+
+    items.forEach(item => {
+      try {
+        const titulo = item.getChildText("title") || "";
+        const pubDateText = item.getChildText("pubDate") || "";
+        const link = item.getChildText("link") || "";
+        const pubDate = new Date(pubDateText);
+
+        const linkNorm = normalizarTexto(link);
+        const tituloNorm = normalizarTexto(titulo);
+
+        if (linkNorm.includes("aol.com") || linkNorm.includes("msn.com")) {
+          const contextoFuerte = contieneAlguno(tituloNorm, [
+            "intelligence", "espionage", "spy", "counterintelligence", "cyber", "security service",
+            "servizi segreti", "fbi", "cia", "mossad", "bnd", "fsb", "sbu", "ssu", "dni",
+            "hacker", "ransomware", "botnet", "dark web"
+          ]);
+
+          if (!contextoFuerte) {
+            registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fuente republicadora (AOL/MSN)");
+            return;
+          }
+        }
+
+        if ((pais || "").toUpperCase() === "ITALIA") {
+          const contextoItaliaFuerte = contieneAlguno(tituloNorm, [
+            "servizi segreti", "intelligence italiana", "cybersicurezza", "crosetto", "rizzi",
+            "dipartimento delle informazioni per la sicurezza", "agenzia informazioni e sicurezza esterna", "aise", "dis", "aisi"
+          ]);
+
+          if (linkNorm.includes("lamilano.it") && !contextoItaliaFuerte) {
+            registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: fuente La Milano irrelevante");
+            return;
+          }
+        }
+
+        if (isNaN(pubDate.getTime())) {
+          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fecha inválida");
+          return;
+        }
+
+        if (pubDate < fechaCorte || pubDate > ahora) {
+          return;
+        }
+
+        const edadDias = Math.floor((ahora.getTime() - pubDate.getTime()) / 86400000);
+        if (edadDias > 7) {
+          registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Fecha demasiado antigua");
+          return;
+        }
+
+        if ((pais || "").toUpperCase() === "ITALIA" && (acronimo || "").toUpperCase() === "AISE") {
+          const ruidoAiseMedio = contieneAlguno(tituloNorm, [
+            "expat", "comites", "volontariato", "libro", "famiglie", "colloquio telefonico",
+            "guida completa", "presentazione del libro"
+          ]);
+
+          const contextoInteligenciaAise = contieneAlguno(tituloNorm, [
+            "servizi segreti", "intelligence", "sicurezza", "crosetto", "cybersicurezza", "inchiesta", "indagate", "dis"
+          ]);
+
+          if ((linkNorm.includes("aise.it") || tituloNorm.includes("aise.it")) && !contextoInteligenciaAise) {
+            registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: ruido Aise.it");
+            return;
+          }
+
+          if (ruidoAiseMedio && !contextoInteligenciaAise) {
+            registrarLog(pais, acronimo, "Sistema", q, titulo, "DESCARTADO", "Italia: ruido tematico Aise.it");
+            return;
+          }
+        }
+
+        const evaluacion = evaluarNoticia(titulo, pais, acronimo, nombreLargo);
+
+        if (evaluacion.valido) {
+          registrarLog(pais, acronimo, evaluacion.categoria || "Inteligencia", q, titulo, "ACEPTADO", evaluacion.motivo);
+          escribirFila(hojaDestino, pais, acronimo, evaluacion.categoria || "Inteligencia", titulo, pubDate, link, evaluacion.motivo);
+        } else {
+          const motivo = evaluacion.motivo || "";
+          if (
+            !motivo.toLowerCase().includes("score=") ||
+            motivo.toLowerCase().includes("ruido") ||
+            motivo.toLowerCase().includes("contexto") ||
+            motivo.toLowerCase().includes("ambiguo")
+          ) {
+            registrarLog(pais, acronimo, evaluacion.categoria || "Inteligencia", q, titulo, "DESCARTADO", evaluacion.motivo);
+          }
+        }
+      } catch (itemErr) {
+        registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", `Error procesando item RSS: ${itemErr}`);
+      }
+    });
+
+    Utilities.sleep(700);
+
   } catch (e) {
-    registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", e.toString());
+    const msg = String(e);
+
+    if (msg.toLowerCase().includes("saxexception")) {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "RSS inválido (SAXException)");
+    } else if (msg.toLowerCase().includes("ancho de banda")) {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", "Se ha superado la cuota de ancho de banda");
+    } else {
+      registrarLog(pais, acronimo, "Sistema", q, "ERROR", "CRÍTICO", msg);
+    }
+
+    Utilities.sleep(1200);
   }
 }
 
